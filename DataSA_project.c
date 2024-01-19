@@ -7,10 +7,15 @@
 #include <string.h>
 #define libraryBookSize 10
 
-/*struct user {
+struct user {
     char username[30];
     char password[30];
-};*/
+};
+
+struct LoginResult {
+    int switchLoginSignUp;
+    struct user loggedInUser;
+};
 
 struct Author {
     char name[100];
@@ -44,8 +49,8 @@ struct BookHistory {
     struct BookHistory* nextPtr;
 };
 
-/*int login(struct user u1, struct user u2, struct user u3, struct user u4);
-void signUp(struct user *u4Ptr, struct user u1, struct user u2, struct user u3);*/
+struct LoginResult login(struct user u1, struct user u2, struct user u3, struct user u4);
+struct user signUp(struct user u1, struct user u2, struct user u3);
 void displayLibraryBook(struct Book libraryBook[]);
 void searchingSorting(struct Book libraryBook[]);
 void sortByVersion(struct Book libraryBook[]);
@@ -58,7 +63,8 @@ void displayBookHistory(struct BookHistory* front, struct BookHistory* temp);
 void deleteBook(struct Book** headBook);
 
 int main() {
-    /*struct user u1, u2, u3, u4;// Create structure variables of user called u1, u2, u3 and u4
+    struct user u1, u2, u3, u4;// Create structure variables of user called u1, u2, u3 and u4
+    struct LoginResult loginResult;
     int switchLoginSignUp;
 
     //Temporary database
@@ -73,13 +79,14 @@ int main() {
     scanf("%d", &switchLoginSignUp);
     do {
         if(switchLoginSignUp == 1) {
-            switchLoginSignUp = login(u1, u2, u3, u4);
+            loginResult = login(u1, u2, u3, u4);
+            switchLoginSignUp = loginResult.switchLoginSignUp;
         } else if(switchLoginSignUp == 2) {
-            signUp(&u4, u1, u2, u3);
+            u4 = signUp(u1, u2, u3);
             printf("Username <%s> with password <%s> has been successfully registered\n", u4.username, u4.password);
             switchLoginSignUp = 1;
         }
-    } while(switchLoginSignUp != 3);*/
+    } while(switchLoginSignUp != 3);
 
     //Assume that there are only 10 books in our digital library
     int option, chooseBook;
@@ -96,6 +103,7 @@ int main() {
         {"Global Economic", "GIT Press", "978-888-888-888-8", "Economics", "Thai", 2024, 12, 524, {"Vovo", "Thai", "PhD", "Economics Award", "I believe in economics"}, NULL, NULL},
         {"AI Research", "Hangul News", "978-999-999-999-9", "Technology", "Korean", 2005, 8, 256, {"Yoyo", "Korean", "Master", "Technology Award", "I believe in technology"}, NULL, NULL}
     };
+    printf("\n\t\t\tGood Day, %s!", loginResult.loggedInUser.username);
     displayLibraryBook(libraryBook);
     searchingSorting(libraryBook); //Searching, sorting
     struct Book* headBook = NULL;
@@ -239,7 +247,7 @@ void addBook(struct Book** headBook, struct Book libraryBook[], struct BookHisto
     if((*headBook) == NULL) {
         (*headBook) = newBookPtr;
     } else {
-        //tenporary pointer for traversing
+        //temporary pointer for traversing
         struct Book* tempBookPtr = (struct Book*) malloc(sizeof(struct Book));
         tempBookPtr = (*headBook);
         while(tempBookPtr -> nextPtr != NULL) {
@@ -301,7 +309,13 @@ void readBook(struct Book* headBook) {
         if(tempBookPtr == NULL) {
             printf("\nNo such book in your currently reading book. Please enter a valid book number!");
         } else {
+            struct ReadingProgress* tempProgress = tempBookPtr->readingProgress;
             printf("\n%s\t----- Page %d", tempBookPtr -> title, tempBookPtr -> readingProgress -> page);
+            printf("\nUser reading progress : Page %i ", tempProgress -> page);
+            while (tempProgress->nextPtr != NULL) {
+                tempProgress = tempProgress->nextPtr;
+                printf("<--- %i ", tempProgress->page);
+            }
             printf("\nUser is reading the book choosen......");
             printf("\nFinished reading. Please update the progress before close the book");
             printf("\nEnter the page you are currently on: ");
@@ -367,8 +381,9 @@ void deleteBook(struct Book** headBook) {
 }
 
 
-/*int login(struct user u1, struct user u2, struct user u3, struct user u4) {
+struct LoginResult login(struct user u1, struct user u2, struct user u3, struct user u4) {
 
+    struct LoginResult result;
     char loginUsername[30], loginPassword[30];
     int loginAttempts = 3, switchLoginSignUp;
 
@@ -381,39 +396,53 @@ void deleteBook(struct Book** headBook) {
         gets(loginPassword);
         if(((strcmp(loginUsername, u1.username) == 0) && (strcmp(loginPassword, u1.password) == 0)) || ((strcmp(loginUsername, u2.username) == 0) && (strcmp(loginPassword, u2.password) == 0)) || ((strcmp(loginUsername, u3.username) == 0) && (strcmp(loginPassword, u3.password) == 0)) || ((strcmp(loginUsername, u4.username) == 0) && (strcmp(loginPassword, u4.password) == 0))) {
             printf("\n*********WELCOME TO E-LIBRARY WITH READING PROGRESS TRACKER***********");
-            switchLoginSignUp = 3;
+            result.switchLoginSignUp = 3;
+            if(strcmp(loginUsername, u1.username) == 0) {
+                result.loggedInUser = u1;
+            } else if(strcmp(loginUsername, u2.username) == 0) {
+                result.loggedInUser = u2;
+            } else if(strcmp(loginUsername, u3.username) == 0) {
+                result.loggedInUser = u3;
+            } else if (strcmp(loginUsername, u4.username) == 0) {
+                result.loggedInUser = u4;
+            }
         } else {
             loginAttempts--;
             printf("Invalid username or password, %d attempts remaining", loginAttempts);
             if(loginAttempts == 0) {
                 printf("\nPlease sign up for an account\n");
-                switchLoginSignUp = 2;
+                result.switchLoginSignUp = 2;
                 break;
             }
         }
     } while(!(((strcmp(loginUsername, u1.username) == 0) && (strcmp(loginPassword, u1.password) == 0)) || ((strcmp(loginUsername, u2.username) == 0) && (strcmp(loginPassword, u2.password) == 0)) || ((strcmp(loginUsername, u3.username) == 0) && (strcmp(loginPassword, u3.password) == 0)) || ((strcmp(loginUsername, u4.username) == 0) && (strcmp(loginPassword, u4.password) == 0))));
 
-    return switchLoginSignUp;
+    return result;
 }
 
-void signUp(struct user *u4Ptr, struct user u1, struct user u2, struct user u3) {
+struct user signUp(struct user u1, struct user u2, struct user u3) {
 
-    char confirmPassword[30];
+    char username[30], password[30], confirmPassword[30];
+    struct user u4;
 
     printf("\n-----------------------------Sign Up Page-----------------------------\n");
     do {
         printf("Create username: ");
         fflush(stdin);
-        gets(u4Ptr->username);
+        gets(username);
         printf("Create password: ");
-        gets(u4Ptr->password);
+        gets(password);
         printf("Confirm password: ");
         gets(confirmPassword);
-        if((strcmp((u4Ptr->username), u1.username) == 0) || (strcmp((u4Ptr->username), u2.username) == 0) || (strcmp((u4Ptr->username), u3.username) == 0)) {
+        if((strcmp((username), u1.username) == 0) || (strcmp((username), u2.username) == 0) || (strcmp((username), u3.username) == 0)) {
             printf("This username already exists, try another\n");
         }
-        if(strcmp((u4Ptr->password), confirmPassword) != 0) {
+        if(strcmp((password), confirmPassword) != 0) {
             printf("Incorrect password, try again\n");
         }
-    } while((strcmp((u4Ptr->username), u1.username) == 0) || (strcmp((u4Ptr->username), u2.username) == 0) || (strcmp((u4Ptr->username), u3.username) == 0) || (strcmp((u4Ptr->password), confirmPassword) != 0));
-}*/
+    } while((strcmp((username), u1.username) == 0) || (strcmp((username), u2.username) == 0) || (strcmp((username), u3.username) == 0) || (strcmp((password), confirmPassword) != 0));
+    strcpy(u4.username, username);
+    strcpy(u4.password, password);
+
+    return u4;
+}
