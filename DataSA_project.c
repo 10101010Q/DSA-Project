@@ -301,7 +301,13 @@ void readBook(struct Book* headBook) {
         if(tempBookPtr == NULL) {
             printf("\nNo such book in your currently reading book. Please enter a valid book number!");
         } else {
+            struct ReadingProgress* tempProgress = tempBookPtr->readingProgress;
             printf("\n%s\t----- Page %d", tempBookPtr -> title, tempBookPtr -> readingProgress -> page);
+            printf("\n User reading progress : Page %i ", tempProgress -> page);
+            while (tempProgress->nextPtr != NULL) {
+                tempProgress = tempProgress->nextPtr;
+                printf("<--- %i ", tempProgress->page);
+            }
             printf("\nUser is reading the book choosen......");
             printf("\nFinished reading. Please update the progress before close the book");
             printf("\nEnter the page you are currently on: ");
